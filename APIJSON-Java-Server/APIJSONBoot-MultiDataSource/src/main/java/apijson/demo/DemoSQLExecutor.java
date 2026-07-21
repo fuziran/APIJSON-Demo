@@ -61,25 +61,41 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
 
     // Redis 缓存 <<<<<<<<<<<<<<<<<<<<<<<
     public static final RedisTemplate<String, String> REDIS_TEMPLATE;
+//    static {
+//        REDIS_TEMPLATE = new RedisTemplate<>();
+//        try {
+//            REDIS_TEMPLATE.setConnectionFactory(new JedisConnectionFactory(new RedisStandaloneConfiguration("127.0.0.1", 6379)));
+//            REDIS_TEMPLATE.setKeySerializer(new StringRedisSerializer());
+//            REDIS_TEMPLATE.setHashValueSerializer(new GenericToStringSerializer<>(Serializable.class));
+//            REDIS_TEMPLATE.setValueSerializer(new GenericToStringSerializer<>(Serializable.class));
+//            //    REDIS_TEMPLATE.setValueSerializer(new FastJsonRedisSerializer<List<JSONMap>>(List.class));
+//            REDIS_TEMPLATE.afterPropertiesSet();
+//        } catch (Throwable e) {
+//            e.printStackTrace();
+//        }
+//    }
     static {
-        REDIS_TEMPLATE = new RedisTemplate<>();
+        RedisTemplate<String, String> template = null;
         try {
-            REDIS_TEMPLATE.setConnectionFactory(new JedisConnectionFactory(new RedisStandaloneConfiguration("127.0.0.1", 6379)));
-            REDIS_TEMPLATE.setKeySerializer(new StringRedisSerializer());
-            REDIS_TEMPLATE.setHashValueSerializer(new GenericToStringSerializer<>(Serializable.class));
-            REDIS_TEMPLATE.setValueSerializer(new GenericToStringSerializer<>(Serializable.class));
-            //    REDIS_TEMPLATE.setValueSerializer(new FastJsonRedisSerializer<List<JSONMap>>(List.class));
-            REDIS_TEMPLATE.afterPropertiesSet();
+            JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(new RedisStandaloneConfiguration("127.0.0.1", 6379));
+            jedisConnectionFactory.afterPropertiesSet();
+            template = new RedisTemplate<>();
+            template.setConnectionFactory(jedisConnectionFactory);
+            template.setKeySerializer(new StringRedisSerializer());
+            template.setHashValueSerializer(new GenericToStringSerializer<>(Serializable.class));
+            template.setValueSerializer(new GenericToStringSerializer<>(Serializable.class));
+            //    template.setValueSerializer(new FastJsonRedisSerializer<List<JSONMap>>(List.class));
+            template.afterPropertiesSet();
         } catch (Throwable e) {
-            e.printStackTrace();
+            System.err.println("Redis connection failed, cache will be disabled: " + e.getMessage());
         }
+        REDIS_TEMPLATE = template;
     }
-
-    //  可重写以下方法，支持 Redis 等单机全局缓存或分布式缓存
+    //  可重写以下方法,支持 Redis 等单机全局缓存或分布式缓存
     @Override
     public List<JSONObject> getCache(String sql, SQLConfig<Long, JSONObject, JSONArray> config) {
         List<JSONObject> list = super.getCache(sql, config);
-        if (list == null) {
+        if (list == null && REDIS_TEMPLATE != null) {
             try {
                 list = JSON.parseArray(REDIS_TEMPLATE.opsForValue().get(sql), JSONObject.class);
             } catch (Throwable e) {
@@ -92,6 +108,10 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
     @Override
     public synchronized void putCache(String sql, List<JSONObject> list, SQLConfig<Long, JSONObject, JSONArray> config) {
         super.putCache(sql, list, config);
+
+        if (REDIS_TEMPLATE == null) {
+            return;
+        }
 
         String table = config != null && config.isMain() ? config.getTable() : null;
         if (table != null && ! DemoSQLConfig.CONFIG_TABLE_LIST.contains(table)) {
@@ -110,6 +130,9 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
     @Override
     public synchronized void removeCache(String sql, SQLConfig<Long, JSONObject, JSONArray> config) {
         super.removeCache(sql, config);
+        if (REDIS_TEMPLATE == null) {
+            return;
+        }
         try {
             if (config.getMethod() == RequestMethod.DELETE) { // 避免缓存击穿
                 REDIS_TEMPLATE.expire(sql, 60, TimeUnit.SECONDS);
@@ -125,39 +148,34 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
 
 
     // 适配连接池，如果这里能拿到连接池的有效 Connection，则 SQLConfig<Long, JSONMap, JSONList> 不需要配置 dbVersion, dbUri, dbAccount, dbPassword
-    @Override
+ @Override
     public Connection getConnection(SQLConfig<Long, JSONObject, JSONArray> config) throws Exception {
         String datasource = config.getDatasource();
         Log.d(TAG, "getConnection  config.getDatasource() = " + datasource);
 
-        String key = datasource + "-" + config.getDatabase();
+        String key = getConnectionKey(config);
         Connection c = getConnection(key);
-        if (datasource != null && (c == null || c.isClosed())) {
+        if ((datasource != null || config.isKingBase()) && (c == null || c.isClosed())) {
             try {
-                DataSource ds;
-                switch (datasource) {
-//                    case "HIKARICP":
-//                        ds = DemoApplication.getApplicationContext().getBean(HikariDataSource.class);
-//                        // 另一种方式是 DemoDataSourceConfig 初始化获取到 DataSource 后给静态变量 DATA_SOURCE_HIKARICP 赋值： ds = DemoDataSourceConfig.DATA_SOURCE_HIKARICP.getConnection();
-//                        break;
-                    default:
-                        Map<String, DruidDataSource> dsMap = DemoApplication.getApplicationContext().getBeansOfType(DruidDataSource.class);
-                        // 另一种方式是 DemoDataSourceConfig 初始化获取到 DataSource 后给静态变量 DATA_SOURCE_DRUID 赋值： ds = DemoDataSourceConfig.DATA_SOURCE_DRUID.getConnection();
-                        switch (datasource) {
-                            case "DRUID-TEST":
-                                ds = dsMap.get("druidTestDataSource");
-                                break;
-                            case "DRUID-ONLINE":
-                                ds = dsMap.get("druidOnlineDataSource");
-                                break;
-                            case "DRUID":
-                                ds = dsMap.get("druidDataSource");
-                                break;
-                            default:
-                                ds = null;
-                                break;
-                        }
-                        break;
+                Map<String, DruidDataSource> dsMap = DemoApplication.getApplicationContext().getBeansOfType(DruidDataSource.class);
+                DataSource ds = null;
+                if (config.isKingBaseMySQL()) {
+                    ds = dsMap.get("kingbaseMysqlDataSource");
+                }
+                else if (config.isKingBaseOracle()) {
+                    ds = dsMap.get("kingbaseOracleDataSource");
+                }
+                else if (config.isKingBaseSQLServer()) {
+                    ds = dsMap.get("kingbaseSqlserverDataSource");
+                }
+                else if ("DRUID-TEST".equals(datasource)) {
+                    ds = dsMap.get("druidTestDataSource");
+                }
+                else if ("DRUID-ONLINE".equals(datasource)) {
+                    ds = dsMap.get("druidOnlineDataSource");
+                }
+                else if ("DRUID".equals(datasource)) {
+                    ds = dsMap.get("druidDataSource");
                 }
 
                 putConnection(key, ds == null ? null : ds.getConnection());
@@ -260,7 +278,8 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
             return result;
         }
 
-        return super.execute(config, unknownType);
+		// Kingbase vendor types are converted by AbstractSQLExecutor.mapResultValue.
+		return super.execute(config, unknownType);
     }
 
     @Override

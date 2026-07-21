@@ -26,6 +26,8 @@ import java.util.*;
 //import apijson.iotdb.IoTDBUtil;
 import apijson.RequestMethod;
 import apijson.StringUtil;
+import apijson.demo.model.Privacy;
+import apijson.demo.model.User;
 import apijson.orm.AbstractParser;
 import apijson.orm.AbstractSQLConfig;
 import apijson.orm.Parser;
@@ -56,11 +58,15 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 	}
 
 	static {
-		DEFAULT_DATABASE = DATABASE_MYSQL;  //TODO 默认数据库类型，改成你自己的。TiDB, MariaDB, OceanBase 这类兼容 MySQL 的可当做 MySQL 使用
+		String kingbaseMode = System.getenv("KINGBASE_MODE");
+		DEFAULT_DATABASE = StringUtil.isEmpty(kingbaseMode, true) ? DATABASE_KINGBASE_SQLSERVER : kingbaseMode;
+		//DEFAULT_DATABASE = DATABASE_KINGBASE_ORACLE;
+		//DEFAULT_DATABASE = DATABASE_KINGBASE_MYSQL;  //TODO 默认数据库类型，改成你自己的。TiDB, MariaDB, OceanBase 这类兼容 MySQL 的可当做 MySQL 使用
 		//	DEFAULT_NAMESPACE = "root"; //TODO 默认数据库名/模式，改成你自己的，仅对 SurrealDB: root 等数据库有效
 		//	DEFAULT_CATALOG = "postgres"; //TODO 默认数据库名/模式，改成你自己的，仅对 PostgreSQL: posgres 等数据库有效
-		DEFAULT_SCHEMA = "sys"; // "apijson";  //TODO 默认数据库名/模式，改成你自己的，默认情况是 MySQL: sys, PostgreSQL: sys, SQL Server: dbo, Manticore: Manticore, Oracle: , StarRocks: quickstart
-
+		//DEFAULT_SCHEMA = "public"; // "apijson";  //TODO 默认数据库名/模式，改成你自己的，默认情况是 MySQL: sys, PostgreSQL: sys, SQL Server: dbo, Manticore: Manticore, Oracle:
+		//DEFAULT_SCHEMA = "PUBLIC";
+		DEFAULT_SCHEMA = "public";
 		// 表名和数据库不一致的，需要配置映射关系。只使用 APIJSONORM 时才需要；
 		// 这个 Demo 用了 apijson-framework 且调用了 APIJSONApplication.init 则不需要
 		// (间接调用 DemoVerifier.init 方法读取数据库 Access 表来替代手动输入配置)。
@@ -68,8 +74,8 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		//		TABLE_KEY_MAP.put(Access.class.getSimpleName(), "access");
 
 		// 表名映射，隐藏真实表名，对安全要求很高的表可以这么做
-		//		TABLE_KEY_MAP.put(User.class.getSimpleName(), "apijson_user");
-		//		TABLE_KEY_MAP.put(Privacy.class.getSimpleName(), "apijson_privacy");
+		TABLE_KEY_MAP.put(User.class.getSimpleName(), "apijson_user");
+		TABLE_KEY_MAP.put(Privacy.class.getSimpleName(), "apijson_privacy");
 
 		// 主键名映射
 		SIMPLE_CALLBACK = new SimpleCallback<Long>() {
@@ -178,6 +184,15 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 
 	@Override
 	public String gainDBVersion() {
+		if(isKingBaseSQLServer()){
+			return "9.0.0";
+		}
+		if(isKingBaseOracle()){
+			return "9.0.0";
+		}
+		if(isKingBaseMySQL()){
+			return "9.0.0";
+		}
 		if (isMySQL()) {
 //			return "5.7.22"; //TODO 改成你自己的 MySQL 或 PostgreSQL 数据库版本号 //MYSQL 8 和 7 使用的 JDBC 配置不一样
             return "8.0.11"; //TODO 改成你自己的 MySQL 或 PostgreSQL 数据库版本号 //MYSQL 8 和 7 使用的 JDBC 配置不一样
@@ -228,6 +243,15 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		return null;
 	}
 
+	@Override
+	public String gainSQLSchema() {
+		String schema = super.gainSQLSchema();
+		if (getSchema() == null && Objects.equals(schema, DEFAULT_SCHEMA) && isKingBaseOracle()) {
+			return System.getenv().getOrDefault("KINGBASE_ORACLE_SCHEMA", "PUBLIC");
+		}
+		return schema;
+	}
+
 	private String dbUri;
 	public DemoSQLConfig setDBUri(String dbUri) {
 		this.dbUri = dbUri;
@@ -238,6 +262,20 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		if (StringUtil.isNotEmpty(dbUri)) {
 			return dbUri;
 		}
+
+		if(isKingBaseSQLServer()){
+			return System.getenv().getOrDefault("KINGBASE_SQLSERVER_URL", "jdbc:kingbase8://192.168.60.128:54323/apijson?currentSchema=public");
+		}
+
+		if(isKingBaseOracle()){
+			return System.getenv().getOrDefault("KINGBASE_ORACLE_URL", "jdbc:kingbase8://192.168.60.128:54322/apijson?currentSchema=PUBLIC");
+		}
+
+
+		if(isKingBaseMySQL()){
+			return System.getenv().getOrDefault("KINGBASE_MYSQL_URL", "jdbc:kingbase8://192.168.60.128:54321/apijson?currentSchema=public");
+		}
+
 
 		if (isMySQL()) {
 			// 这个是 MySQL 8.0 及以上，要加 userSSL=false
@@ -331,6 +369,19 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 			return dbAccount;
 		}
 
+
+		if(isKingBaseSQLServer()){
+			return System.getenv().getOrDefault("KINGBASE_USERNAME", "system");
+		}
+
+		if(isKingBaseOracle()){
+			return System.getenv().getOrDefault("KINGBASE_USERNAME", "system");
+		}
+
+		if(isKingBaseMySQL()){
+			return System.getenv().getOrDefault("KINGBASE_USERNAME", "system");
+		}
+
 		if (isMySQL()) {
 			return "root"; //TODO 改成你自己的
 //			return "apijson";  //TODO 改成你自己的
@@ -340,7 +391,7 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		}
 		//if (isCockroachDB()) { // PG JDBC 必须在 URI 传 catalog
 		//	return "demo"; //TODO 改成你自己的
-		//	//return "postgres"; //TODO 改成你自己的
+		//	//return "postgres"; //TODO 改成你自己的f
 		//}
 		if (isSQLServer()) {
 			return "sa";  //TODO 改成你自己的
@@ -418,8 +469,20 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 			return dbPassword;
 		}
 
+		if(isKingBaseSQLServer()){
+			return System.getenv().getOrDefault("KINGBASE_PASSWORD", "123456");
+		}
+
+		if(isKingBaseOracle()){
+			return System.getenv().getOrDefault("KINGBASE_PASSWORD", "123456");
+		}
+
+		if(isKingBaseMySQL()){
+			return System.getenv().getOrDefault("KINGBASE_PASSWORD", "123456");
+		}
+
 		if (isMySQL()) {
-			return "apijson";  //TODO 改成你自己的，TiDB 可以当成 MySQL 使用， 默认密码为空字符串 ""
+			return "123456";  //TODO 改成你自己的，TiDB 可以当成 MySQL 使用， 默认密码为空字符串 ""
 		}
 		if (isPostgreSQL()) {
 			return null;  //TODO 改成你自己的

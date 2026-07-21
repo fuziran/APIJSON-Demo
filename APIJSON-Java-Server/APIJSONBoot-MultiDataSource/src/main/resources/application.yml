@@ -11,6 +11,36 @@ spring:
 #    user: ${spring.datasource.hikari.username}
 #    password: ${spring.datasource.hikari.password}
   datasource:
+
+    kingbase-sqlserver:
+      driverClassName: com.kingbase8.Driver
+      url: ${KINGBASE_SQLSERVER_URL:jdbc:kingbase8://192.168.60.128:54323/apijson?currentSchema=public}
+      username: ${KINGBASE_USERNAME:system}
+      password: ${KINGBASE_PASSWORD:123456}
+      type: com.alibaba.druid.pool.DruidDataSource
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+
+    kingbase-oracle:
+      driverClassName: com.kingbase8.Driver
+      url: ${KINGBASE_ORACLE_URL:jdbc:kingbase8://192.168.60.128:54322/apijson?currentSchema=PUBLIC}
+      username: ${KINGBASE_USERNAME:system}
+      password: ${KINGBASE_PASSWORD:123456}
+      type: com.alibaba.druid.pool.DruidDataSource
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+
+    kingbase-mysql:
+      driverClassName: com.kingbase8.Driver
+      url: ${KINGBASE_MYSQL_URL:jdbc:kingbase8://192.168.60.128:54321/apijson?currentSchema=public}
+      username: ${KINGBASE_USERNAME:system}
+      password: ${KINGBASE_PASSWORD:123456}
+      type: com.alibaba.druid.pool.DruidDataSource
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
     # type: com.zaxxer.hikari.HikariDataSource
     # driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://localhost:3306?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
@@ -34,7 +64,7 @@ spring:
       driverClassName: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://localhost:3306?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
       username: root
-      password: apijson
+      password: 123456
       type: com.alibaba.druid.pool.DruidDataSource
       initialSize: 5
       minIdle: 5
@@ -108,7 +138,7 @@ spring:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
 apijson:
   auto-test:
-    enabled: ${AUTO_TEST_ENABLED:true}
+    enabled: ${AUTO_TEST_ENABLED:false}
     cron: ${AUTO_TEST_CRON:0 0 10,20 * * *}
     zone: ${AUTO_TEST_ZONE:Asia/Shanghai}
     start-url: ${AUTO_TEST_START_URL:http://localhost:3000/test/start}

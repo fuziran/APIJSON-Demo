@@ -77,6 +77,7 @@ public class DemoApplication implements WebServerFactoryCustomizer<ConfigurableS
     }
 
     public static void main(String[] args) throws Exception {
+
         APPLICATION_CONTEXT = SpringApplication.run(DemoApplication.class, args);
 
         try {
@@ -90,7 +91,7 @@ public class DemoApplication implements WebServerFactoryCustomizer<ConfigurableS
         //unitauto.Log.DEBUG = true;
         Log.DEBUG = true; // 是否开启调试模式（打印详细日志、返回详细调试信息等）
         AbstractParser.IS_PRINT_BIG_LOG = true; // 是否打印大日志
-        APIJSONVerifier.ENABLE_APIJSON_ROUTER = true; // apijson-framework 已集成字段插件 apijson-router，是否开启 接口路由 模式，支持简单接口转为 APIJSON JSON
+        APIJSONVerifier.ENABLE_APIJSON_ROUTER = false; // apijson-framework 已集成字段插件 apijson-router，是否开启 接口路由 模式，支持简单接口转为 APIJSON JSON
         //APIJSONParser.IS_START_FROM_1 = true; // 分页页码是否从 1 开始，true - 从 1 开始；false - 从 0 开始
         APIJSONSQLConfig.ENABLE_COLUMN_CONFIG = false; // apijson-framework 已集成字段插件 apijson-column，支持 !key 反选字段 和 字段名映射
         APIJSONApplication.init();
@@ -122,6 +123,15 @@ public class DemoApplication implements WebServerFactoryCustomizer<ConfigurableS
 
     static {
         // 把以下需要用到的数据库驱动取消注释即可，如果这里没有可以自己新增
+		try {
+			Log.d(TAG, "尝试加载 Kingbase 驱动 <<<<<<<<<<<<<<<<<<<<< ");
+			Class.forName("com.kingbase8.Driver");
+			Log.d(TAG, "成功加载 Kingbase 驱动！>>>>>>>>>>>>>>>>>>>>> ");
+		}
+		catch (ClassNotFoundException e) {
+			Log.e(TAG, "加载 Kingbase 驱动失败，请检查 kingbase8 JDBC 依赖是否存在以及可用 ！！！", e);
+		}
+
         //		try { //加载驱动程序
         //			Log.d(TAG, "尝试加载 SQLServer 驱动 <<<<<<<<<<<<<<<<<<<<< ");
         //			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -192,25 +202,25 @@ public class DemoApplication implements WebServerFactoryCustomizer<ConfigurableS
             Log.e(TAG, "加载 Databricks 驱动失败，请检查 pom.xml 中 com.databricks 版本是否存在以及可用 ！！！");
         }
 
-        try { //加载驱动程序
-            Log.d(TAG, "尝试加载 IoTDB 驱动 <<<<<<<<<<<<<<<<<<<<< ");
-            Class.forName("org.apache.iotdb.jdbc.IoTDBDriver");
-            Log.d(TAG, "成功加载 IoTDB 驱动！>>>>>>>>>>>>>>>>>>>>> ");
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            Log.e(TAG, "加载 IoTDB 驱动失败，请检查 pom.xml 中 org.apache.iotdb.jdbc 版本是否存在以及可用 ！！！");
-        }
-
-        try { //加载驱动程序
-            Log.d(TAG, "尝试加载 DuckDB 驱动 <<<<<<<<<<<<<<<<<<<<< ");
-            Class.forName("org.duckdb.DuckDBDriver");
-            Log.d(TAG, "成功加载 DuckDB 驱动！>>>>>>>>>>>>>>>>>>>>> ");
-        }
-        catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            Log.e(TAG, "加载 DuckDB 驱动失败，请检查 pom.xml 中 org.duckdb 版本是否存在以及可用 ！！！");
-        }
+//        try { //加载驱动程序
+//            Log.d(TAG, "尝试加载 IoTDB 驱动 <<<<<<<<<<<<<<<<<<<<< ");
+//            Class.forName("org.apache.iotdb.jdbc.IoTDBDriver");
+//            Log.d(TAG, "成功加载 IoTDB 驱动！>>>>>>>>>>>>>>>>>>>>> ");
+//        }
+//        catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//            Log.e(TAG, "加载 IoTDB 驱动失败，请检查 pom.xml 中 org.apache.iotdb.jdbc 版本是否存在以及可用 ！！！");
+//        }
+//
+//        try { //加载驱动程序
+//            Log.d(TAG, "尝试加载 DuckDB 驱动 <<<<<<<<<<<<<<<<<<<<< ");
+//            Class.forName("org.duckdb.DuckDBDriver");
+//            Log.d(TAG, "成功加载 DuckDB 驱动！>>>>>>>>>>>>>>>>>>>>> ");
+//        }
+//        catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//            Log.e(TAG, "加载 DuckDB 驱动失败，请检查 pom.xml 中 org.duckdb 版本是否存在以及可用 ！！！");
+//        }
 
         //    try { //加载驱动程序
         //      Log.d(TAG, "尝试加载 TDengine 驱动 <<<<<<<<<<<<<<<<<<<<< ");

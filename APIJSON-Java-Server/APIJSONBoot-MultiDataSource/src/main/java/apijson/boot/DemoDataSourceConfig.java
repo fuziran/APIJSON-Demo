@@ -64,4 +64,24 @@ public class DemoDataSourceConfig {
 		return new DruidDataSource();
 	}
 
+	@Bean
+	@ConfigurationProperties(prefix = "spring.datasource.kingbase-mysql")
+	public DruidDataSource kingbaseMysqlDataSource(){
+		return new DruidDataSource();
+	}
+
+	@Bean
+	@ConfigurationProperties(prefix = "spring.datasource.kingbase-oracle")
+	public DruidDataSource kingbaseOracleDataSource() {
+		return new DruidDataSource();
+	}
+
+	@Bean
+	@ConfigurationProperties(prefix = "spring.datasource.kingbase-sqlserver")
+	public DruidDataSource kingbaseSqlserverDataSource() {
+		return new DruidDataSource();
+	}
+
+
+
 }
