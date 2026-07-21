@@ -28,6 +28,7 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONArray;
 //import org.duckdb.JsonNode;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -76,9 +77,20 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
 //    }
     static {
         RedisTemplate<String, String> template = null;
+        JedisConnectionFactory jedisConnectionFactory = null;
         try {
-            JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory(new RedisStandaloneConfiguration("127.0.0.1", 6379));
+            jedisConnectionFactory = new JedisConnectionFactory(new RedisStandaloneConfiguration("127.0.0.1", 6379));
             jedisConnectionFactory.afterPropertiesSet();
+
+            // afterPropertiesSet 只初始化连接工厂，并不会验证 Redis 是否可连接。
+            // 在启用缓存前主动探测，避免 Redis 不可用时每次查询都重复打印连接异常。
+            try (RedisConnection connection = jedisConnectionFactory.getConnection()) {
+                String pong = connection.ping();
+                if (! "PONG".equalsIgnoreCase(pong)) {
+                    throw new IllegalStateException("Unexpected Redis PING response: " + pong);
+                }
+            }
+
             template = new RedisTemplate<>();
             template.setConnectionFactory(jedisConnectionFactory);
             template.setKeySerializer(new StringRedisSerializer());
@@ -87,6 +99,13 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
             //    template.setValueSerializer(new FastJsonRedisSerializer<List<JSONMap>>(List.class));
             template.afterPropertiesSet();
         } catch (Throwable e) {
+            if (jedisConnectionFactory != null) {
+                try {
+                    jedisConnectionFactory.destroy();
+                } catch (Throwable ignored) {
+                }
+            }
+            template = null;
             System.err.println("Redis connection failed, cache will be disabled: " + e.getMessage());
         }
         REDIS_TEMPLATE = template;

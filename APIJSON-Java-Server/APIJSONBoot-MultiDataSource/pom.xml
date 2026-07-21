@@ -22,6 +22,16 @@
     </properties>
 
     <dependencies>
+        <!--
+            必须放在 databend-jdbc 前：0.3.9 的驱动包内嵌了 SLF4J 1.7 类，
+            让标准 SLF4J 2 API 优先进入运行时类路径，兼容 Spring Boot 3.2。
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.13</version>
+        </dependency>
+
         <!-- APIJSON 需要用的依赖库，1.2.0 以上 -->
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
@@ -228,6 +238,13 @@
             <groupId>com.taosdata.jdbc</groupId>
             <artifactId>taos-jdbcdriver</artifactId>
             <version>2.0.38</version>
+            <exclusions>
+                <!-- Spring 6 使用 spring-jcl，避免同时加载原版 Commons Logging。 -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.influxdb</groupId>
@@ -310,7 +327,7 @@
 <!--        </dependency>-->
 
 
-        <!-- APIJSONBoot 需要用的 SpringBoot 框架，JDK 17+ 对应 SpringBoot 3.0+，排除导致编译报错的 snakeyaml 和 logback，重新依赖 snakeyaml -->
+        <!-- APIJSONBoot 需要用的 SpringBoot 框架，JDK 17+ 对应 SpringBoot 3.0+ -->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
@@ -321,16 +338,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <version>3.2.5</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-<!--                <exclusion>-->
-<!--                    <groupId>org.slf4j</groupId>-->
-<!--                    <artifactId>slf4j-simple</artifactId>-->
-<!--                </exclusion>-->
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

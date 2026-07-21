@@ -1,4 +1,7 @@
 spring:
+  # MongoDB JDBC 驱动会误触发 Spring Boot 的 MongoClient 自动配置；本项目由 APIJSON 自行管理数据库连接。
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
   servlet:
     multipart:
       max-file-size: 50MB
