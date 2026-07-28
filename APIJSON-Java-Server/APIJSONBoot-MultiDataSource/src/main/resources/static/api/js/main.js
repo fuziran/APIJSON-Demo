@@ -12125,7 +12125,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
         }
 
         this.coverage = {}
-        this.requestPost(false, '/coverage/start', {}, {}, function (url, res, err) {
+        this.request(false, REQUEST_TYPE_POST, REQUEST_TYPE_JSON, this.getBaseUrl() + '/coverage/start', {}, {}, function (url, res, err) {
           try {
             App.onResponse(url, res, err)
             if (DEBUG) {

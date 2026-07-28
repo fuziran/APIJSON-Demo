@@ -16,6 +16,7 @@ package apijson.demo;
 
 import apijson.*;
 import apijson.boot.DemoApplication;
+import apijson.boot.KingbaseDataSourceRegistry;
 //import apijson.cassandra.CassandraUtil;
 import apijson.fastjson2.APIJSONSQLExecutor;
 //import apijson.influxdb.InfluxDBUtil;
@@ -178,14 +179,12 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
             try {
                 Map<String, DruidDataSource> dsMap = DemoApplication.getApplicationContext().getBeansOfType(DruidDataSource.class);
                 DataSource ds = null;
-                if (config.isKingBaseMySQL()) {
-                    ds = dsMap.get("kingbaseMysqlDataSource");
-                }
-                else if (config.isKingBaseOracle()) {
-                    ds = dsMap.get("kingbaseOracleDataSource");
-                }
-                else if (config.isKingBaseSQLServer()) {
-                    ds = dsMap.get("kingbaseSqlserverDataSource");
+                if (config.isKingBase()) {
+                    KingbaseDataSourceRegistry registry = DemoApplication.getApplicationContext()
+                            .getBean(KingbaseDataSourceRegistry.class);
+                    String database = config.getDatabase() == null
+                            ? DemoSQLConfig.getConfiguredDefaultDatabase() : config.getDatabase();
+                    ds = registry.getVerifiedDataSource(database);
                 }
                 else if ("DRUID-TEST".equals(datasource)) {
                     ds = dsMap.get("druidTestDataSource");
@@ -199,6 +198,10 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
 
                 putConnection(key, ds == null ? null : ds.getConnection());
             } catch (Exception e) {
+                if (config.isKingBase()) {
+                    throw new IllegalStateException("Kingbase data source verification or routing failed: "
+                            + e.getMessage(), e);
+                }
                 Log.e(TAG, "getConnection   try { "
                         + "DataSource ds = DemoApplication.getApplicationContext().getBean(DataSource.class); .."
                         + "} catch (Exception e) = " + e.getMessage());

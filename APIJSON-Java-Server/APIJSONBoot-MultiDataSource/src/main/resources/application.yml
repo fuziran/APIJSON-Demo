@@ -17,33 +17,36 @@ spring:
 
     kingbase-sqlserver:
       driverClassName: com.kingbase8.Driver
-      url: ${KINGBASE_SQLSERVER_URL:jdbc:kingbase8://192.168.60.128:54323/apijson?currentSchema=public}
+      url: ${KINGBASE_SQLSERVER_URL:jdbc:kingbase8://192.168.219.132:54323/apijson?currentSchema=public}
       username: ${KINGBASE_USERNAME:system}
       password: ${KINGBASE_PASSWORD:123456}
       type: com.alibaba.druid.pool.DruidDataSource
       initialSize: 5
       minIdle: 5
       maxActive: 20
+      validationQuery: SELECT 1
 
     kingbase-oracle:
       driverClassName: com.kingbase8.Driver
-      url: ${KINGBASE_ORACLE_URL:jdbc:kingbase8://192.168.60.128:54322/apijson?currentSchema=PUBLIC}
+      url: ${KINGBASE_ORACLE_URL:jdbc:kingbase8://192.168.219.132:54322/apijson?currentSchema=PUBLIC}
       username: ${KINGBASE_USERNAME:system}
       password: ${KINGBASE_PASSWORD:123456}
       type: com.alibaba.druid.pool.DruidDataSource
       initialSize: 5
       minIdle: 5
       maxActive: 20
+      validationQuery: SELECT 1
 
     kingbase-mysql:
       driverClassName: com.kingbase8.Driver
-      url: ${KINGBASE_MYSQL_URL:jdbc:kingbase8://192.168.60.128:54321/apijson?currentSchema=public}
+      url: ${KINGBASE_MYSQL_URL:jdbc:kingbase8://192.168.219.132:54321/apijson?currentSchema=public}
       username: ${KINGBASE_USERNAME:system}
       password: ${KINGBASE_PASSWORD:123456}
       type: com.alibaba.druid.pool.DruidDataSource
       initialSize: 5
       minIdle: 5
       maxActive: 20
+      validationQuery: SELECT 1
     # type: com.zaxxer.hikari.HikariDataSource
     # driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://localhost:3306?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
@@ -140,6 +143,14 @@ spring:
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
 apijson:
+  kingbase:
+    # 校验期望兼容模式与 SHOW database_mode 返回的真实模式是否一致。
+    verify-on-startup: ${KINGBASE_VERIFY_ON_STARTUP:true}
+    # 默认只校验当前默认模式；开启后会在启动时校验全部 Kingbase 数据源。
+    verify-all-on-startup: ${KINGBASE_VERIFY_ALL_ON_STARTUP:false}
+  # 本地 APIAuto 回归专用；生产环境应将 APIJSON_RELOAD_TEST_PHONE/CODE 置空以禁用。
+  reload-test-phone: ${APIJSON_RELOAD_TEST_PHONE:}
+  reload-test-code: ${APIJSON_RELOAD_TEST_CODE:}
   auto-test:
     enabled: ${AUTO_TEST_ENABLED:false}
     cron: ${AUTO_TEST_CRON:0 0 10,20 * * *}

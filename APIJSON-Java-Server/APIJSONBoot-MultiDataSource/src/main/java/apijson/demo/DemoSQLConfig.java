@@ -26,6 +26,7 @@ import java.util.*;
 //import apijson.iotdb.IoTDBUtil;
 import apijson.RequestMethod;
 import apijson.StringUtil;
+import apijson.boot.KingbaseModeDetector;
 import apijson.demo.model.Privacy;
 import apijson.demo.model.User;
 import apijson.orm.AbstractParser;
@@ -59,7 +60,8 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 
 	static {
 		String kingbaseMode = System.getenv("KINGBASE_MODE");
-		DEFAULT_DATABASE = StringUtil.isEmpty(kingbaseMode, true) ? DATABASE_KINGBASE_SQLSERVER : kingbaseMode;
+		DEFAULT_DATABASE = StringUtil.isEmpty(kingbaseMode, true)
+				? DATABASE_KINGBASE_MYSQL : KingbaseModeDetector.normalizeConfiguredDatabase(kingbaseMode);
 		//DEFAULT_DATABASE = DATABASE_KINGBASE_ORACLE;
 		//DEFAULT_DATABASE = DATABASE_KINGBASE_MYSQL;  //TODO 默认数据库类型，改成你自己的。TiDB, MariaDB, OceanBase 这类兼容 MySQL 的可当做 MySQL 使用
 		//	DEFAULT_NAMESPACE = "root"; //TODO 默认数据库名/模式，改成你自己的，仅对 SurrealDB: root 等数据库有效
@@ -177,6 +179,10 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 
 		ColumnUtil.init();
 
+	}
+
+	public static String getConfiguredDefaultDatabase() {
+		return DEFAULT_DATABASE;
 	}
 
 

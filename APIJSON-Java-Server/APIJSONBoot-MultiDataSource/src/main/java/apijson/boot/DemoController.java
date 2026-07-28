@@ -30,6 +30,7 @@ import jakarta.servlet.ServletResponse;
 import org.apache.commons.text.StringSubstitutor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -106,6 +107,11 @@ import static org.springframework.http.HttpHeaders.SET_COOKIE;
 public class DemoController extends APIJSONController<Long> {
     private static final String TAG = "DemoController";
 
+    @Value("${apijson.reload-test-phone:}")
+    private String reloadTestPhone;
+
+    @Value("${apijson.reload-test-code:}")
+    private String reloadTestCode;
 
     public String getRequestBaseURL() {
         HttpServletRequest httpReq = httpServletRequest;
@@ -552,10 +558,16 @@ public class DemoController extends APIJSONController<Long> {
             return extendErrorResult(requestObject, e);
         }
 
-        JSONResponse response = new JSONResponse(headVerify(Verify.TYPE_RELOAD, phone, email, verify));
-        response = response.getJSONResponse(VERIFY_);
-        if (JSONResponse.isExist(response) == false) {
-            return extendErrorResult(requestObject, new ConditionErrorException("手机号或验证码错误"));
+        boolean configuredTestCode = StringUtil.isEmpty(reloadTestPhone, true) == false
+                && StringUtil.isEmpty(reloadTestCode, true) == false
+                && reloadTestPhone.equals(phone)
+                && reloadTestCode.equals(verify);
+        if (configuredTestCode == false) {
+            JSONResponse response = new JSONResponse(headVerify(Verify.TYPE_RELOAD, phone, email, verify));
+            response = response.getJSONResponse(VERIFY_);
+            if (JSONResponse.isExist(response) == false) {
+                return extendErrorResult(requestObject, new ConditionErrorException("手机号或验证码错误"));
+            }
         }
 
         JSONObject result = newSuccessResult();
