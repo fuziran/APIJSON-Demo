@@ -11,6 +11,38 @@ spring:
 #    user: ${spring.datasource.hikari.username}
 #    password: ${spring.datasource.hikari.password}
   datasource:
+    kingbase-sqlserver:
+      driverClassName: com.kingbase8.Driver
+      url: ${KINGBASE_SQLSERVER_URL:}
+      username: ${KINGBASE_SQLSERVER_USERNAME:${KINGBASE_USERNAME:}}
+      password: ${KINGBASE_SQLSERVER_PASSWORD:${KINGBASE_PASSWORD:}}
+      type: com.alibaba.druid.pool.DruidDataSource
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      validationQuery: SELECT 1
+
+    kingbase-oracle:
+      driverClassName: com.kingbase8.Driver
+      url: ${KINGBASE_ORACLE_URL:}
+      username: ${KINGBASE_ORACLE_USERNAME:${KINGBASE_USERNAME:}}
+      password: ${KINGBASE_ORACLE_PASSWORD:${KINGBASE_PASSWORD:}}
+      type: com.alibaba.druid.pool.DruidDataSource
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      validationQuery: SELECT 1
+
+    kingbase-mysql:
+      driverClassName: com.kingbase8.Driver
+      url: ${KINGBASE_MYSQL_URL:}
+      username: ${KINGBASE_MYSQL_USERNAME:${KINGBASE_USERNAME:}}
+      password: ${KINGBASE_MYSQL_PASSWORD:${KINGBASE_PASSWORD:}}
+      type: com.alibaba.druid.pool.DruidDataSource
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      validationQuery: SELECT 1
     # type: com.zaxxer.hikari.HikariDataSource
     # driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://localhost:3306?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
@@ -107,6 +139,10 @@ spring:
           starttls:
             enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
 apijson:
+  kingbase:
+    enabled: ${APIJSON_KINGBASE_ENABLED:false}
+    verify-on-startup: ${KINGBASE_VERIFY_ON_STARTUP:true}
+    verify-all-on-startup: ${KINGBASE_VERIFY_ALL_ON_STARTUP:false}
   auto-test:
     enabled: ${AUTO_TEST_ENABLED:true}
     cron: ${AUTO_TEST_CRON:0 0 10,20 * * *}
