@@ -16,6 +16,7 @@ package apijson.demo;
 
 import apijson.*;
 import apijson.boot.DemoApplication;
+import apijson.boot.KingbaseDataSourceRegistry;
 //import apijson.cassandra.CassandraUtil;
 import apijson.fastjson2.APIJSONSQLExecutor;
 //import apijson.influxdb.InfluxDBUtil;
@@ -130,12 +131,25 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
         String datasource = config.getDatasource();
         Log.d(TAG, "getConnection  config.getDatasource() = " + datasource);
 
-        String key = datasource + "-" + config.getDatabase();
+        String key = getConnectionKey(config);
         Connection c = getConnection(key);
-        if (datasource != null && (c == null || c.isClosed())) {
+        if ((datasource != null || config.isKingBase())
+                && (c == null || c.isClosed())) {
             try {
                 DataSource ds;
-                switch (datasource) {
+                if (config.isKingBase()) {
+                    KingbaseDataSourceRegistry registry =
+                            DemoApplication.getApplicationContext()
+                                    .getBean(KingbaseDataSourceRegistry.class);
+
+                    String database = config.getDatabase() == null
+                            ? DemoSQLConfig.getConfiguredDefaultDatabase()
+                            : config.getDatabase();
+
+                    ds = registry.getVerifiedDataSource(database);
+                }
+                else {
+                    switch (datasource) {
 //                    case "HIKARICP":
 //                        ds = DemoApplication.getApplicationContext().getBean(HikariDataSource.class);
 //                        // 另一种方式是 DemoDataSourceConfig 初始化获取到 DataSource 后给静态变量 DATA_SOURCE_HIKARICP 赋值： ds = DemoDataSourceConfig.DATA_SOURCE_HIKARICP.getConnection();
@@ -158,10 +172,17 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
                                 break;
                         }
                         break;
+                    }
                 }
 
                 putConnection(key, ds == null ? null : ds.getConnection());
             } catch (Exception e) {
+                if (config.isKingBase()) {
+                    throw new IllegalStateException(
+                            "Kingbase data source verification or routing failed: "
+                                    + e.getMessage(), e);
+                }
+
                 Log.e(TAG, "getConnection   try { "
                         + "DataSource ds = DemoApplication.getApplicationContext().getBean(DataSource.class); .."
                         + "} catch (Exception e) = " + e.getMessage());
