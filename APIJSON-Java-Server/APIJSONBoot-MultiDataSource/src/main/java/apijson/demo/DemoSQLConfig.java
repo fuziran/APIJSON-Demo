@@ -26,6 +26,7 @@ import java.util.*;
 //import apijson.iotdb.IoTDBUtil;
 import apijson.RequestMethod;
 import apijson.StringUtil;
+import apijson.boot.KingbaseModeDetector;
 import apijson.orm.AbstractParser;
 import apijson.orm.AbstractSQLConfig;
 import apijson.orm.Parser;
@@ -56,10 +57,27 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 	}
 
 	static {
-		DEFAULT_DATABASE = DATABASE_MYSQL;  //TODO 默认数据库类型，改成你自己的。TiDB, MariaDB, OceanBase 这类兼容 MySQL 的可当做 MySQL 使用
+		String kingbaseMode = System.getenv("KINGBASE_MODE");
+		boolean kingbaseEnabled = Boolean.parseBoolean(
+				System.getenv().getOrDefault(
+						"APIJSON_KINGBASE_ENABLED", "false"));
+
+		if (kingbaseEnabled) {
+			if (StringUtil.isEmpty(kingbaseMode, true)) {
+				throw new IllegalStateException(
+						"KINGBASE_MODE is required when Kingbase is enabled");
+			}
+
+			DEFAULT_DATABASE =
+					KingbaseModeDetector.normalizeConfiguredDatabase(kingbaseMode);
+			DEFAULT_SCHEMA = "public";
+		}
+		else {
+			DEFAULT_DATABASE = DATABASE_MYSQL;  //TODO 默认数据库类型，改成你自己的。TiDB, MariaDB, OceanBase 这类兼容 MySQL 的可当做 MySQL 使用
+			DEFAULT_SCHEMA = "sys"; // "apijson";  //TODO 默认数据库名/模式，改成你自己的，默认情况是 MySQL: sys, PostgreSQL: sys, SQL Server: dbo, Manticore: Manticore, Oracle: , StarRocks: quickstart
+		}
 		//	DEFAULT_NAMESPACE = "root"; //TODO 默认数据库名/模式，改成你自己的，仅对 SurrealDB: root 等数据库有效
 		//	DEFAULT_CATALOG = "postgres"; //TODO 默认数据库名/模式，改成你自己的，仅对 PostgreSQL: posgres 等数据库有效
-		DEFAULT_SCHEMA = "sys"; // "apijson";  //TODO 默认数据库名/模式，改成你自己的，默认情况是 MySQL: sys, PostgreSQL: sys, SQL Server: dbo, Manticore: Manticore, Oracle: , StarRocks: quickstart
 
 		// 表名和数据库不一致的，需要配置映射关系。只使用 APIJSONORM 时才需要；
 		// 这个 Demo 用了 apijson-framework 且调用了 APIJSONApplication.init 则不需要
@@ -173,11 +191,19 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 
 	}
 
+	public static String getConfiguredDefaultDatabase() {
+		return DEFAULT_DATABASE;
+	}
 
 	// 如果 DemoSQLExecutor.getConnection 能拿到连接池的有效 Connection，则这里不需要配置 dbVersion, dbUri, dbAccount, dbPassword
 
 	@Override
 	public String gainDBVersion() {
+		if (isKingBaseMySQL()
+				|| isKingBaseOracle()
+				|| isKingBaseSQLServer()) {
+			return "9.0.0";
+		}
 		if (isMySQL()) {
 //			return "5.7.22"; //TODO 改成你自己的 MySQL 或 PostgreSQL 数据库版本号 //MYSQL 8 和 7 使用的 JDBC 配置不一样
             return "8.0.11"; //TODO 改成你自己的 MySQL 或 PostgreSQL 数据库版本号 //MYSQL 8 和 7 使用的 JDBC 配置不一样
@@ -615,6 +641,18 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 	////		return InfluxDBUtil.getSQLSchema(super.getSQLSchema(), isIoTDB());
 	////		return IoTDBUtil.getSQLSchema(super.getSQLSchema().replaceAll("-", "."), isIoTDB());
 	//	}
+
+	@Override
+	public String gainSQLSchema() {
+		String schema = super.gainSQLSchema();
+		if (getSchema() == null
+				&& Objects.equals(schema, DEFAULT_SCHEMA)
+				&& isKingBaseOracle()) {
+			return System.getenv().getOrDefault(
+					"KINGBASE_ORACLE_SCHEMA", "PUBLIC");
+		}
+		return schema;
+	}
 
 	@Override
 	public String gainSQLTable() {
