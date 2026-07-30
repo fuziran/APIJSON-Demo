@@ -14,6 +14,7 @@ limitations under the License.*/
 
 package apijson.boot;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,6 +62,36 @@ public class DemoDataSourceConfig {
 	@Bean
 	@ConfigurationProperties(prefix = "spring.datasource.druid-online")
 	public DruidDataSource druidOnlineDataSource(){
+		return new DruidDataSource();
+	}
+
+	@Bean
+	@ConditionalOnProperty(
+			prefix = "apijson.kingbase",
+			name = "enabled",
+			havingValue = "true")
+	@ConfigurationProperties(prefix = "spring.datasource.kingbase-mysql")
+	public DruidDataSource kingbaseMysqlDataSource() {
+		return new DruidDataSource();
+	}
+
+	@Bean
+	@ConditionalOnProperty(
+			prefix = "apijson.kingbase",
+			name = "enabled",
+			havingValue = "true")
+	@ConfigurationProperties(prefix = "spring.datasource.kingbase-oracle")
+	public DruidDataSource kingbaseOracleDataSource() {
+		return new DruidDataSource();
+	}
+
+	@Bean
+	@ConditionalOnProperty(
+			prefix = "apijson.kingbase",
+			name = "enabled",
+			havingValue = "true")
+	@ConfigurationProperties(prefix = "spring.datasource.kingbase-sqlserver")
+	public DruidDataSource kingbaseSqlserverDataSource() {
 		return new DruidDataSource();
 	}
 
