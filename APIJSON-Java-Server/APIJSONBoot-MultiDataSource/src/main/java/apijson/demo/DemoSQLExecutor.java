@@ -29,6 +29,7 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.JSONArray;
 //import org.duckdb.JsonNode;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -124,6 +125,10 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
 
     // Redis 缓存 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    protected ApplicationContext getApplicationContext() {
+        return DemoApplication.getApplicationContext();
+    }
+
 
     // 适配连接池，如果这里能拿到连接池的有效 Connection，则 SQLConfig<Long, JSONMap, JSONList> 不需要配置 dbVersion, dbUri, dbAccount, dbPassword
     @Override
@@ -139,7 +144,7 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
                 DataSource ds;
                 if (config.isKingBase()) {
                     KingbaseDataSourceRegistry registry =
-                            DemoApplication.getApplicationContext()
+                            getApplicationContext()
                                     .getBean(KingbaseDataSourceRegistry.class);
 
                     String database = config.getDatabase() == null
@@ -155,7 +160,9 @@ public class DemoSQLExecutor extends APIJSONSQLExecutor<Long> {
 //                        // 另一种方式是 DemoDataSourceConfig 初始化获取到 DataSource 后给静态变量 DATA_SOURCE_HIKARICP 赋值： ds = DemoDataSourceConfig.DATA_SOURCE_HIKARICP.getConnection();
 //                        break;
                     default:
-                        Map<String, DruidDataSource> dsMap = DemoApplication.getApplicationContext().getBeansOfType(DruidDataSource.class);
+                        Map<String, DruidDataSource> dsMap =
+                                getApplicationContext()
+                                        .getBeansOfType(DruidDataSource.class);
                         // 另一种方式是 DemoDataSourceConfig 初始化获取到 DataSource 后给静态变量 DATA_SOURCE_DRUID 赋值： ds = DemoDataSourceConfig.DATA_SOURCE_DRUID.getConnection();
                         switch (datasource) {
                             case "DRUID-TEST":
