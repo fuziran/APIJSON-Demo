@@ -8,6 +8,13 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -99,6 +106,78 @@ public class KingbaseDataSourceRegistryTest {
         assertEquals(1, mysqlConnections.get());
         assertEquals(1, oracleConnections.get());
         assertEquals(1, sqlserverConnections.get());
+    }
+
+    @Test
+    public void mapsEachDatabaseTypeToItsOwnDataSource() throws Exception {
+        DataSource mysql = dataSource("mysql");
+        DataSource oracle = dataSource("oracle");
+        DataSource sqlserver = dataSource("sqlserver");
+        KingbaseDataSourceRegistry registry = registry(
+                mysql,
+                oracle,
+                sqlserver,
+                SQLConfig.DATABASE_KINGBASE_MYSQL,
+                false,
+                false);
+        registry.afterPropertiesSet();
+
+        assertSame(
+                mysql,
+                registry.getVerifiedDataSource(
+                        SQLConfig.DATABASE_KINGBASE_MYSQL));
+        assertSame(
+                oracle,
+                registry.getVerifiedDataSource(
+                        SQLConfig.DATABASE_KINGBASE_ORACLE));
+        assertSame(
+                sqlserver,
+                registry.getVerifiedDataSource(
+                        SQLConfig.DATABASE_KINGBASE_SQLSERVER));
+    }
+
+    @Test
+    public void concurrentFirstAccessVerifiesDataSourceOnlyOnce()
+            throws Exception {
+        AtomicInteger connectionCount = new AtomicInteger();
+        DataSource mysql = dataSource("mysql", connectionCount);
+        KingbaseDataSourceRegistry registry = registry(
+                mysql,
+                dataSource("oracle"),
+                dataSource("sqlserver"),
+                SQLConfig.DATABASE_KINGBASE_MYSQL,
+                false,
+                false);
+        registry.afterPropertiesSet();
+
+        int callerCount = 16;
+        CountDownLatch ready = new CountDownLatch(callerCount);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(callerCount);
+        List<Future<DataSource>> futures = new ArrayList<>();
+        try {
+            for (int i = 0; i < callerCount; i++) {
+                futures.add(executor.submit(() -> {
+                    ready.countDown();
+                    start.await();
+                    return registry.getVerifiedDataSource(
+                            SQLConfig.DATABASE_KINGBASE_MYSQL);
+                }));
+            }
+
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            start.countDown();
+            for (Future<DataSource> future : futures) {
+                assertSame(mysql, future.get(10, TimeUnit.SECONDS));
+            }
+        }
+        finally {
+            start.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+        }
+
+        assertEquals(1, connectionCount.get());
     }
 
     @Test
