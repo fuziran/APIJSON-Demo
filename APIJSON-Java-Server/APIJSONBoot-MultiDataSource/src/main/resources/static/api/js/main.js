@@ -9510,11 +9510,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       getDoc: function (callback, columnSearch, tableSearch, schemaSearch, isBackground) {
 
         var routeDatabase = this.database
-        var dialectDatabase = CodeUtil.getDialectDatabase(routeDatabase)
-        var isTSQL = ['ORACLE', 'DAMENG'].indexOf(dialectDatabase) >= 0
+        var metadataDatabase = CodeUtil.getMetadataDatabase(routeDatabase)
+        var isTSQL = ['ORACLE', 'DAMENG'].indexOf(metadataDatabase) >= 0
         var isNotTSQL = ! isTSQL
-        var isSQLServer = dialectDatabase == 'SQLSERVER'
-        var isPostgreSQL = dialectDatabase == 'POSTGRESQL'
+        var isSQLServer = metadataDatabase == 'SQLSERVER'
+        var isPostgreSQL = metadataDatabase == 'POSTGRESQL'
 
         var count = isBackground ? Math.min(10, this.count) : this.count || 100  //超过就太卡了
         var page = isBackground ? 0 : this.page || 0
@@ -9982,11 +9982,11 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       },
 
       getTableKey: function(database) {
-        database = CodeUtil.getDialectDatabase(database || this.database)
+        database = CodeUtil.getMetadataDatabase(database || this.database)
         return database == 'SQLSERVER' ? 'SysTable' : (['ORACLE', 'DAMENG'].indexOf(database) >= 0 ? 'AllTable' : 'Table')
       },
       getColumnKey: function(database) {
-        database = CodeUtil.getDialectDatabase(database || this.database)
+        database = CodeUtil.getMetadataDatabase(database || this.database)
         return database == 'SQLSERVER' ? 'SysColumn' : (['ORACLE', 'DAMENG'].indexOf(database) >= 0 ? 'AllColumn' : 'Column')
       },
       getTableObj: function(tableIndex) {

@@ -102,6 +102,19 @@ var CodeUtil = {
     }
   },
 
+  // Kingbase compatibility modes change the accepted SQL syntax, but they do
+  // not expose the MySQL, Oracle or SQL Server system catalogs. APIAuto must
+  // query Kingbase metadata through its PostgreSQL-compatible catalogs.
+  getMetadataDatabase: function(database) {
+    var value = database == null ? '' : String(database).trim().toUpperCase();
+    if (value == 'KINGBASE-MYSQL'
+        || value == 'KINGBASE-ORACLE'
+        || value == 'KINGBASE-SQLSERVER') {
+      return 'POSTGRESQL';
+    }
+    return CodeUtil.getDialectDatabase(value);
+  },
+
   extractTableNames: function(keys) {
     if (StringUtil.isEmpty(keys)) {
       return null;
