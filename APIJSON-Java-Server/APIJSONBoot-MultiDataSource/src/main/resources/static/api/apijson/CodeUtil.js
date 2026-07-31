@@ -53,6 +53,9 @@ var CodeUtil = {
   DATABASE_DB2: 'DB2',
   DATABASE_DAMENG: 'DAMENG',
   DATABASE_KINGBASE: 'KINGBASE',
+  DATABASE_KINGBASE_MYSQL: 'KINGBASE-MYSQL',
+  DATABASE_KINGBASE_ORACLE: 'KINGBASE-ORACLE',
+  DATABASE_KINGBASE_SQLSERVER: 'KINGBASE-SQLSERVER',
   DATABASE_TIDB: 'TIDB',
   DATABASE_TDENGINE: 'TDENGINE',
   DATABASE_SURREALDB: 'SURREALDB',
@@ -82,6 +85,22 @@ var CodeUtil = {
   tableList: [],
   thirdParty: 'YAPI',
   thirdPartyApiMap: null,  // {}
+
+  // APIJSON uses the KINGBASE-* values to select a concrete data source, while
+  // APIAuto needs the compatible SQL dialect to build and parse metadata queries.
+  getDialectDatabase: function(database) {
+    var value = database == null ? '' : String(database).trim().toUpperCase();
+    switch (value) {
+      case 'KINGBASE-MYSQL':
+        return 'MYSQL';
+      case 'KINGBASE-ORACLE':
+        return 'ORACLE';
+      case 'KINGBASE-SQLSERVER':
+        return 'SQLSERVER';
+      default:
+        return value;
+    }
+  },
 
   extractTableNames: function(keys) {
     if (StringUtil.isEmpty(keys)) {
@@ -130,6 +149,7 @@ var CodeUtil = {
       return '';
     }
 
+    database = CodeUtil.getDialectDatabase(database);
     var reqObj = JSON5.parse(reqStr);
 
     var possibleTables = CodeUtil.extractTableNames(StringUtil.split(method, '/', true)) || [];
@@ -6286,7 +6306,7 @@ res_data = rep.json()
     OWNER: '拥有者',
     ADMIN: '管理员'
   },
-  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS', 'IOTDB', 'SURREALDB', 'DUCKDB', 'CASSANDRA', 'MONGODB', 'SNOWFLAKE', 'DATABRICKS', 'MILVUS'], // , 'KAFKA'],
+  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'KINGBASE-MYSQL', 'KINGBASE-ORACLE', 'KINGBASE-SQLSERVER', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS', 'IOTDB', 'SURREALDB', 'DUCKDB', 'CASSANDRA', 'MONGODB', 'SNOWFLAKE', 'DATABRICKS', 'MILVUS'], // , 'KAFKA'],
 
   getComment4Function: function (funCallStr, method, language) {
     if (typeof funCallStr != 'string') {

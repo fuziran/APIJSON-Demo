@@ -9509,8 +9509,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
        */
       getDoc: function (callback, columnSearch, tableSearch, schemaSearch, isBackground) {
 
-      	var isTSQL = ['ORACLE', 'DAMENG'].indexOf(this.database) >= 0
-      	var isNotTSQL = ! isTSQL
+        var routeDatabase = this.database
+        var dialectDatabase = CodeUtil.getDialectDatabase(routeDatabase)
+        var isTSQL = ['ORACLE', 'DAMENG'].indexOf(dialectDatabase) >= 0
+        var isNotTSQL = ! isTSQL
+        var isSQLServer = dialectDatabase == 'SQLSERVER'
+        var isPostgreSQL = dialectDatabase == 'POSTGRESQL'
 
         var count = isBackground ? Math.min(10, this.count) : this.count || 100  //超过就太卡了
         var page = isBackground ? 0 : this.page || 0
@@ -9533,7 +9537,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
 
         this.request(false, HTTP_METHOD_POST, REQUEST_TYPE_JSON, this.getBaseUrl() + '/get', {
           format: false,
-          '@database': StringUtil.isEmpty(this.database, true) ? undefined : this.database,
+          // Keep the KINGBASE-* value for server-side data-source routing.
+          '@database': StringUtil.isEmpty(routeDatabase, true) ? undefined : routeDatabase,
           // '@schema': StringUtil.isEmpty(this.schema, true) ? undefined : this.schema,
           'sql@': isBackground ? null : {
             'from': 'Access',
@@ -9555,19 +9560,19 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
           '[]': {
             'count': count,
             'page': page,
-            'Table': isTSQL || this.database == 'SQLSERVER' ? null : {
+            'Table': isTSQL || isSQLServer ? null : {
               'table_schema{}': schemas,
               'table_type': 'BASE TABLE',
               // 'table_name!$': ['\\_%', 'sys\\_%', 'system\\_%'],
               'table_name%$': isBackground || search == null || search.length <= 0 ? null : search,
               'table_name$': isBackground != true || tblSearch == null || tblSearch.length <= 0 ? null : tblSearch,
-              'table_comment%$': isBackground || isTblNameSearch || this.database == 'POSTGRESQL' || search == null || search.length <= 0 ? null : search,
+              'table_comment%$': isBackground || isTblNameSearch || isPostgreSQL || search == null || search.length <= 0 ? null : search,
               'table_schema!$': '\\_%',
               'table_name!$': '\\_%',
-              '@combine': isTblNameSearch || this.database == 'POSTGRESQL' || search == null || search.length <= 0 ? null : 'table_name%$,table_comment%$',
+              '@combine': isTblNameSearch || isPostgreSQL || search == null || search.length <= 0 ? null : 'table_name%$,table_comment%$',
               'table_name{}@': isBackground ? null : 'sql',
               '@order': isBackground ? 'rand()' : 'table_name+', //MySQL 8 SELECT `table_name` 返回的仍然是大写的 TABLE_NAME，需要 AS 一下
-              '@column': (schemas != null && schemas.length == 1 ? '' : 'table_schema:table_schema,') + (this.database == 'POSTGRESQL' ? 'table_name' : 'table_name:table_name,table_comment:table_comment'),
+              '@column': (schemas != null && schemas.length == 1 ? '' : 'table_schema:table_schema,') + (isPostgreSQL ? 'table_name' : 'table_name:table_name,table_comment:table_comment'),
               '@key': 'table_name_table_schema:(table_name,table_schema)',
               'table_name_table_schema{}@': isBackground ? {
                 'from': 'Column',
@@ -9583,12 +9588,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 }
               } : null
             },
-            'PgClass': this.database != 'POSTGRESQL' ? null : {
+            'PgClass': ! isPostgreSQL ? null : {
               'relname@': '/Table/table_name',
               //FIXME  多个 schema 有同名表时数据总是取前面的  不属于 pg_class 表 'nspname': this.schema,
               '@column': 'oid;obj_description(oid):table_comment'
             },
-            'SysTable': this.database != 'SQLSERVER' ? null : {
+            'SysTable': ! isSQLServer ? null : {
               'name!$': [
                 '\\_%',
                 'sys\\_%',
@@ -9597,7 +9602,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               '@order': 'name+',
               '@column': 'name:table_name,object_id'
             },
-            'ExtendedProperty': this.database != 'SQLSERVER' ? null : {
+            'ExtendedProperty': ! isSQLServer ? null : {
               '@order': 'name+',
               'major_id@': '/SysTable/object_id',
               '@column': 'value:table_comment'
@@ -9624,30 +9629,30 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               'Column': isTSQL ? null : {
                 'table_schema{}': schemas,
                 'table_schema@': schemas != null && schemas.length == 1 ? null : '[]/Table/table_schema',
-                'table_name@': this.database != 'SQLSERVER' ? '[]/Table/table_name' : "[]/SysTable/table_name",
+                'table_name@': ! isSQLServer ? '[]/Table/table_name' : "[]/SysTable/table_name",
                 // 'table_schema!$': '\\_%',
                 // 'table_name!$': '\\_%',
                 'column_name$': colSearch == null || colSearch.length <= 0 ? null : colSearch,
                 'column_comment[>': 2,
-                "@order": isBackground ? 'rand()' : (this.database != 'SQLSERVER' ? null : "table_name+"), // 'column_name_len+,table_name+' : "table_name+"),
-                '@column': (this.database == 'POSTGRESQL' || this.database == 'SQLSERVER'  //MySQL 8 SELECT `column_name` 返回的仍然是大写的 COLUMN_NAME，需要 AS 一下
+                "@order": isBackground ? 'rand()' : (! isSQLServer ? null : "table_name+"), // 'column_name_len+,table_name+' : "table_name+"),
+                '@column': (isPostgreSQL || isSQLServer  //MySQL 8 SELECT `column_name` 返回的仍然是大写的 COLUMN_NAME，需要 AS 一下
                   ? 'column_name;data_type;numeric_precision,numeric_scale,character_maximum_length'
                   : 'column_name:column_name,column_type:column_type,is_nullable:is_nullable,column_default:column_default,column_comment:column_comment')
                   // + (isBackground ? ';length(column_name):column_name_len' : '')
               },
-              'PgAttribute': this.database != 'POSTGRESQL' ? null : {
+              'PgAttribute': ! isPostgreSQL ? null : {
                 'attrelid@': '[]/PgClass/oid',
                 'attname@': '/Column/column_name',
                 'attnum>': 0,
                 '@column': 'col_description(attrelid,attnum):column_comment'
               },
-              'SysColumn': this.database != 'SQLSERVER' ? null : {
+              'SysColumn': ! isSQLServer ? null : {
                 'object_id@': '[]/SysTable/object_id',
                 'name@': '/Column/column_name',
                 '@order': 'object_id+',
                 '@column': 'object_id,column_id'
               },
-              'ExtendedProperty': this.database != 'SQLSERVER' ? null : {
+              'ExtendedProperty': ! isSQLServer ? null : {
                 '@order': 'major_id+',
                 'major_id@': '/SysColumn/object_id',
                 'minor_id@': '/SysColumn/column_id',
@@ -9799,7 +9804,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               var item = list[i];
 
               //Table
-              var table = item == null ? null : (App.database != 'SQLSERVER' ? item.Table : item.SysTable);
+              var table = item == null ? null : (isTSQL ? item.AllTable : (isSQLServer ? item.SysTable : item.Table));
               if (table == null) {
                 continue;
               }
@@ -9807,12 +9812,14 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                 log('getDoc [] for i=' + i + ': table = \n' + format(JSON.stringify(table)));
               }
 
-              var table_comment = App.database == 'POSTGRESQL'
+              var table_comment = isTSQL
+                ? (item.AllTableComment || {}).table_comment
+                : (isPostgreSQL
                 ? (item.PgClass || {}).table_comment
-                : (App.database == 'SQLSERVER'
+                : (isSQLServer
                     ? (item.ExtendedProperty || {}).table_comment
                     : table.table_comment
-                );
+                ));
               // item.Table.table_name = table.table_name
               // item.Table.table_comment = table_comment
 
@@ -9845,7 +9852,8 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
               }
 
               for (var j = 0; j < columnList.length; j++) {
-                var column = (columnList[j] || {})[App.database != 'SQLSERVER' ? 'Column' : 'SysColumn'];
+                var columnItem = columnList[j] || {};
+                var column = isTSQL ? columnItem.AllColumn : (isSQLServer ? columnItem.SysColumn : columnItem.Column);
                 var name = column == null ? null : column.column_name;
                 if (name == null) {
                   continue;
@@ -9859,12 +9867,14 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                   log('getDoc [] for j=' + j + ': column = \n' + format(JSON.stringify(column)));
                 }
 
-                var o = App.database == 'POSTGRESQL'
+                var o = isTSQL
+                  ? columnItem.AllColumnComment
+                  : (isPostgreSQL
                   ? (columnList[j] || {}).PgAttribute
-                  : (App.database == 'SQLSERVER'
+                  : (isSQLServer
                       ? (columnList[j] || {}).ExtendedProperty
                       : column
-                  );
+                  ));
                 var column_comment = (o || {}).column_comment
                 var column_default = column.column_default
 
@@ -9972,12 +9982,12 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
       },
 
       getTableKey: function(database) {
-        database = database || this.database
-        return this.database == 'SQLSERVER' ? 'SysTable' : (['ORALCE', 'DAMENG'].indexOf(database) >= 0 ? 'AllTable' : 'Table')
+        database = CodeUtil.getDialectDatabase(database || this.database)
+        return database == 'SQLSERVER' ? 'SysTable' : (['ORACLE', 'DAMENG'].indexOf(database) >= 0 ? 'AllTable' : 'Table')
       },
       getColumnKey: function(database) {
-        database = database || this.database
-        return this.database == 'SQLSERVER' ? 'SysColumn' : (['ORALCE', 'DAMENG'].indexOf(database) >= 0 ? 'AllColumn' : 'Column')
+        database = CodeUtil.getDialectDatabase(database || this.database)
+        return database == 'SQLSERVER' ? 'SysColumn' : (['ORACLE', 'DAMENG'].indexOf(database) >= 0 ? 'AllColumn' : 'Column')
       },
       getTableObj: function(tableIndex) {
         var list = docObj == null ? null : docObj['[]']
@@ -14312,6 +14322,10 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                     type: stringType,
                     comment: 'MySQL'
                   }, {
+                    name: isSingle ? "'KINGBASE-MYSQL'" : '"KINGBASE-MYSQL"',
+                    type: stringType,
+                    comment: 'Kingbase MySQL 兼容模式'
+                  }, {
                     name: isSingle ? "'POSTGRESQL'" : '"POSTGRESQL"',
                     type: stringType,
                     comment: 'PostgreSQL'
@@ -14320,9 +14334,17 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                     type: stringType,
                     comment: 'SQLServer'
                   }, {
+                    name: isSingle ? "'KINGBASE-SQLSERVER'" : '"KINGBASE-SQLSERVER"',
+                    type: stringType,
+                    comment: 'Kingbase SQL Server 兼容模式'
+                  }, {
                     name: isSingle ? "'ORACLE'" : '"ORACLE"',
                     type: stringType,
                     comment: 'Oracle'
+                  }, {
+                    name: isSingle ? "'KINGBASE-ORACLE'" : '"KINGBASE-ORACLE"',
+                    type: stringType,
+                    comment: 'Kingbase Oracle 兼容模式'
                   }, {
                     name: isSingle ? "'DB2'" : '"DB2"',
                     type: stringType,
