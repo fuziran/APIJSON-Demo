@@ -456,6 +456,34 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>kingbase-it</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>3.2.5</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*IT.java</include>
+                            </includes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <!-- Allow access to Spring milestones and snapshots -->
     <!-- (you don't need this if you are using anything after 0.5.0.RELEASE) -->
     <repositories>
