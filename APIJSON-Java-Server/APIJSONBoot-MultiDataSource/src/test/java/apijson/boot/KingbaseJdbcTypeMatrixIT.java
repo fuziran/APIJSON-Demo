@@ -1,5 +1,8 @@
 package apijson.boot;
 
+import apijson.demo.DemoSQLConfig;
+import apijson.demo.DemoSQLExecutor;
+import apijson.orm.SQLConfig;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -159,10 +162,31 @@ public class KingbaseJdbcTypeMatrixIT {
             for (TypeCase typeCase : modeCases()) {
                 runCase(connection, typeCase);
             }
+            if (mode == Mode.MYSQL) {
+                runApiJsonMySqlJsonBindingCase(connection);
+            }
             probeModeSpecificTypes(connection);
             runNullAndEmptyCases(connection);
             recordKnownCompatibilitySemantics();
         }
+    }
+
+    private void runApiJsonMySqlJsonBindingCase(Connection connection)
+            throws Exception {
+        runCase(connection, typeCase(
+                "apijson-json-array-binding",
+                "JSON",
+                "APIJSON setArgument(Types.OTHER)",
+                (currentConnection, statement, index) -> {
+                    DemoSQLConfig config = new DemoSQLConfig();
+                    config.setDatabase(SQLConfig.DATABASE_KINGBASE_MYSQL);
+                    new DemoSQLExecutor().setArgument(
+                            config,
+                            statement,
+                            index - 1,
+                            Arrays.asList("image.jpg"));
+                },
+                value -> assertTrue(value.toString().contains("image.jpg"))));
     }
 
     private void verifyServerMode(Connection connection) throws SQLException {
