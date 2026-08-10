@@ -14322,7 +14322,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                     type: stringType,
                     comment: 'MySQL'
                   }, {
-                    name: isSingle ? "'KINGBASE-MYSQL'" : '"KINGBASE-MYSQL"',
+                    name: isSingle ? "'KINGBASE_MYSQL'" : '"KINGBASE_MYSQL"',
                     type: stringType,
                     comment: 'Kingbase MySQL 兼容模式'
                   }, {
@@ -14334,7 +14334,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                     type: stringType,
                     comment: 'SQLServer'
                   }, {
-                    name: isSingle ? "'KINGBASE-SQLSERVER'" : '"KINGBASE-SQLSERVER"',
+                    name: isSingle ? "'KINGBASE_SQLSERVER'" : '"KINGBASE_SQLSERVER"',
                     type: stringType,
                     comment: 'Kingbase SQL Server 兼容模式'
                   }, {
@@ -14342,7 +14342,7 @@ Content-Type: ` + contentType) + (StringUtil.isEmpty(headerStr, true) ? '' : hea
                     type: stringType,
                     comment: 'Oracle'
                   }, {
-                    name: isSingle ? "'KINGBASE-ORACLE'" : '"KINGBASE-ORACLE"',
+                    name: isSingle ? "'KINGBASE_ORACLE'" : '"KINGBASE_ORACLE"',
                     type: stringType,
                     comment: 'Kingbase Oracle 兼容模式'
                   }, {

@@ -30,9 +30,9 @@ public class KingbaseJdbcSmokeIT {
     private static final String TABLE = "apijson_kb_smoke";
 
     private enum Mode {
-        MYSQL("KINGBASE-MYSQL", "mysql", "`", "KINGBASE_MYSQL"),
-        ORACLE("KINGBASE-ORACLE", "oracle", "\"", "KINGBASE_ORACLE"),
-        SQLSERVER("KINGBASE-SQLSERVER", "sqlserver", "\"", "KINGBASE_SQLSERVER");
+        MYSQL("KINGBASE_MYSQL", "mysql", "`", "KINGBASE_MYSQL"),
+        ORACLE("KINGBASE_ORACLE", "oracle", "\"", "KINGBASE_ORACLE"),
+        SQLSERVER("KINGBASE_SQLSERVER", "sqlserver", "\"", "KINGBASE_SQLSERVER");
 
         private final String database;
         private final String serverMode;

@@ -22,15 +22,15 @@ public class KingbaseModeDetectorTest {
         assertEquals(
                 SQLConfig.DATABASE_KINGBASE_MYSQL,
                 KingbaseModeDetector.normalizeConfiguredDatabase(
-                        " kingbase-mysql "));
+                        " kingbase_mysql "));
         assertEquals(
                 SQLConfig.DATABASE_KINGBASE_ORACLE,
                 KingbaseModeDetector.normalizeConfiguredDatabase(
-                        "KingBase-Oracle"));
+                        "KingBase_Oracle"));
         assertEquals(
                 SQLConfig.DATABASE_KINGBASE_SQLSERVER,
                 KingbaseModeDetector.normalizeConfiguredDatabase(
-                        "KINGBASE-SQLSERVER"));
+                        "KINGBASE_SQLSERVER"));
     }
 
     @Test
@@ -41,9 +41,9 @@ public class KingbaseModeDetectorTest {
                         "KINGBASE-POSTGRESQL"));
 
         assertTrue(exception.getMessage().contains("Unsupported"));
-        assertTrue(exception.getMessage().contains("KINGBASE-MYSQL"));
-        assertTrue(exception.getMessage().contains("KINGBASE-ORACLE"));
-        assertTrue(exception.getMessage().contains("KINGBASE-SQLSERVER"));
+        assertTrue(exception.getMessage().contains("KINGBASE_MYSQL"));
+        assertTrue(exception.getMessage().contains("KINGBASE_ORACLE"));
+        assertTrue(exception.getMessage().contains("KINGBASE_SQLSERVER"));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class KingbaseModeDetectorTest {
                 SQLConfig.DATABASE_KINGBASE_MYSQL,
                 KingbaseModeDetector.verify(
                         connectionReturning("mysql", new AtomicReference<>()),
-                        "kingbase-mysql"));
+                        "kingbase_mysql"));
     }
 
     @Test

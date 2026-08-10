@@ -63,10 +63,10 @@ public class KingbaseJdbcTypeMatrixIT {
             UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
     private enum Mode {
-        MYSQL("KINGBASE-MYSQL", "mysql", "`", "KINGBASE_MYSQL"),
-        ORACLE("KINGBASE-ORACLE", "oracle", "\"", "KINGBASE_ORACLE"),
+        MYSQL("KINGBASE_MYSQL", "mysql", "`", "KINGBASE_MYSQL"),
+        ORACLE("KINGBASE_ORACLE", "oracle", "\"", "KINGBASE_ORACLE"),
         SQLSERVER(
-                "KINGBASE-SQLSERVER",
+                "KINGBASE_SQLSERVER",
                 "sqlserver",
                 "\"",
                 "KINGBASE_SQLSERVER");

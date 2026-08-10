@@ -36,7 +36,7 @@ public class KingbaseSpringIsolationTest {
     @Test
     public void enabledKingbaseCreatesAndBindsAllThreeDataSources() {
         Map<String, Object> properties = properties(true);
-        properties.put("KINGBASE_MODE", "KINGBASE-MYSQL");
+        properties.put("KINGBASE_MODE", "KINGBASE_MYSQL");
         properties.put("apijson.kingbase.verify-on-startup", "false");
         properties.put(
                 "spring.datasource.kingbase-mysql.url",

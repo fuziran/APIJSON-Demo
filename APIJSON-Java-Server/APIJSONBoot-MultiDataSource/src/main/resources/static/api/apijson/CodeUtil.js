@@ -53,9 +53,9 @@ var CodeUtil = {
   DATABASE_DB2: 'DB2',
   DATABASE_DAMENG: 'DAMENG',
   DATABASE_KINGBASE: 'KINGBASE',
-  DATABASE_KINGBASE_MYSQL: 'KINGBASE-MYSQL',
-  DATABASE_KINGBASE_ORACLE: 'KINGBASE-ORACLE',
-  DATABASE_KINGBASE_SQLSERVER: 'KINGBASE-SQLSERVER',
+  DATABASE_KINGBASE_MYSQL: 'KINGBASE_MYSQL',
+  DATABASE_KINGBASE_ORACLE: 'KINGBASE_ORACLE',
+  DATABASE_KINGBASE_SQLSERVER: 'KINGBASE_SQLSERVER',
   DATABASE_TIDB: 'TIDB',
   DATABASE_TDENGINE: 'TDENGINE',
   DATABASE_SURREALDB: 'SURREALDB',
@@ -91,11 +91,11 @@ var CodeUtil = {
   getDialectDatabase: function(database) {
     var value = database == null ? '' : String(database).trim().toUpperCase();
     switch (value) {
-      case 'KINGBASE-MYSQL':
+      case 'KINGBASE_MYSQL':
         return 'MYSQL';
-      case 'KINGBASE-ORACLE':
+      case 'KINGBASE_ORACLE':
         return 'ORACLE';
-      case 'KINGBASE-SQLSERVER':
+      case 'KINGBASE_SQLSERVER':
         return 'SQLSERVER';
       default:
         return value;
@@ -107,9 +107,9 @@ var CodeUtil = {
   // query Kingbase metadata through its PostgreSQL-compatible catalogs.
   getMetadataDatabase: function(database) {
     var value = database == null ? '' : String(database).trim().toUpperCase();
-    if (value == 'KINGBASE-MYSQL'
-        || value == 'KINGBASE-ORACLE'
-        || value == 'KINGBASE-SQLSERVER') {
+    if (value == 'KINGBASE_MYSQL'
+        || value == 'KINGBASE_ORACLE'
+        || value == 'KINGBASE_SQLSERVER') {
       return 'POSTGRESQL';
     }
     return CodeUtil.getDialectDatabase(value);
@@ -6319,7 +6319,7 @@ res_data = rep.json()
     OWNER: '拥有者',
     ADMIN: '管理员'
   },
-  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'KINGBASE-MYSQL', 'KINGBASE-ORACLE', 'KINGBASE-SQLSERVER', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS', 'IOTDB', 'SURREALDB', 'DUCKDB', 'CASSANDRA', 'MONGODB', 'SNOWFLAKE', 'DATABRICKS', 'MILVUS'], // , 'KAFKA'],
+  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'KINGBASE_MYSQL', 'KINGBASE_ORACLE', 'KINGBASE_SQLSERVER', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS', 'IOTDB', 'SURREALDB', 'DUCKDB', 'CASSANDRA', 'MONGODB', 'SNOWFLAKE', 'DATABRICKS', 'MILVUS'], // , 'KAFKA'],
 
   getComment4Function: function (funCallStr, method, language) {
     if (typeof funCallStr != 'string') {

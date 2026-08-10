@@ -114,8 +114,8 @@ public class DemoSQLExecutorRoutingTest {
             throws Exception {
         KingbaseDataSourceRegistry registry =
                 new StubRegistry(null, new SQLException(
-                        "expected KINGBASE-MYSQL but server reported "
-                                + "KINGBASE-ORACLE"));
+                        "expected KINGBASE_MYSQL but server reported "
+                                + "KINGBASE_ORACLE"));
         DemoSQLExecutor executor = new TestExecutor(context(
                 Collections.emptyMap(), registry, new AtomicInteger()));
         IllegalStateException exception = assertThrows(
@@ -123,8 +123,8 @@ public class DemoSQLExecutorRoutingTest {
                 () -> executor.getConnection(config(
                         SQLConfig.DATABASE_KINGBASE_MYSQL, null)));
 
-        assertTrue(exception.getMessage().contains("KINGBASE-MYSQL"));
-        assertTrue(exception.getMessage().contains("KINGBASE-ORACLE"));
+        assertTrue(exception.getMessage().contains("KINGBASE_MYSQL"));
+        assertTrue(exception.getMessage().contains("KINGBASE_ORACLE"));
     }
 
     @Test
