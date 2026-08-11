@@ -5658,6 +5658,10 @@ https://github.com/Tencent/APIJSON/issues
         }
 
         var isMLEnabled = this.isMLEnabled
+        // Kingbase compatibility modes expose tagList as JSON. Applying the generic
+        // "[>" condition generates length(json), which is ambiguous in Kingbase.
+        // Empty tag lists are already ignored while assembling App.tags below.
+        var isKingbaseChainDatabase = String(this.database || '').toUpperCase().indexOf('KINGBASE') >= 0
         var userId = this.User.id
         var project = this.projectHost.project
         var reportId = this.reportId
@@ -5780,7 +5784,7 @@ https://github.com/Tencent/APIJSON/issues
               'userId': userId,
               '@column': "groupId;any_value(tagList):tagList",
               '@group': 'groupId',
-              'tagList[>': 0
+              'tagList[>': isKingbaseChainDatabase ? null : 0
             }
           },
           '@role': IS_NODE ? null : 'LOGIN',
