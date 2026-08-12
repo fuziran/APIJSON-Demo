@@ -53,9 +53,6 @@ var CodeUtil = {
   DATABASE_DB2: 'DB2',
   DATABASE_DAMENG: 'DAMENG',
   DATABASE_KINGBASE: 'KINGBASE',
-  DATABASE_KINGBASE_MYSQL: 'KINGBASE_MYSQL',
-  DATABASE_KINGBASE_ORACLE: 'KINGBASE_ORACLE',
-  DATABASE_KINGBASE_SQLSERVER: 'KINGBASE_SQLSERVER',
   DATABASE_TIDB: 'TIDB',
   DATABASE_TDENGINE: 'TDENGINE',
   DATABASE_SURREALDB: 'SURREALDB',
@@ -85,35 +82,6 @@ var CodeUtil = {
   tableList: [],
   thirdParty: 'YAPI',
   thirdPartyApiMap: null,  // {}
-
-  // APIJSON uses the KINGBASE-* values to select a concrete data source, while
-  // APIAuto needs the compatible SQL dialect to build and parse metadata queries.
-  getDialectDatabase: function(database) {
-    var value = database == null ? '' : String(database).trim().toUpperCase();
-    switch (value) {
-      case 'KINGBASE_MYSQL':
-        return 'MYSQL';
-      case 'KINGBASE_ORACLE':
-        return 'ORACLE';
-      case 'KINGBASE_SQLSERVER':
-        return 'SQLSERVER';
-      default:
-        return value;
-    }
-  },
-
-  // Kingbase compatibility modes change the accepted SQL syntax, but they do
-  // not expose the MySQL, Oracle or SQL Server system catalogs. APIAuto must
-  // query Kingbase metadata through its PostgreSQL-compatible catalogs.
-  getMetadataDatabase: function(database) {
-    var value = database == null ? '' : String(database).trim().toUpperCase();
-    if (value == 'KINGBASE_MYSQL'
-        || value == 'KINGBASE_ORACLE'
-        || value == 'KINGBASE_SQLSERVER') {
-      return 'POSTGRESQL';
-    }
-    return CodeUtil.getDialectDatabase(value);
-  },
 
   extractTableNames: function(keys) {
     if (StringUtil.isEmpty(keys)) {
@@ -162,7 +130,6 @@ var CodeUtil = {
       return '';
     }
 
-    database = CodeUtil.getDialectDatabase(database);
     var reqObj = JSON5.parse(reqStr);
 
     var possibleTables = CodeUtil.extractTableNames(StringUtil.split(method, '/', true)) || [];
@@ -6319,7 +6286,7 @@ res_data = rep.json()
     OWNER: '拥有者',
     ADMIN: '管理员'
   },
-  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'KINGBASE_MYSQL', 'KINGBASE_ORACLE', 'KINGBASE_SQLSERVER', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS', 'IOTDB', 'SURREALDB', 'DUCKDB', 'CASSANDRA', 'MONGODB', 'SNOWFLAKE', 'DATABRICKS', 'MILVUS'], // , 'KAFKA'],
+  DATABASE_KEYS: ['MYSQL', 'POSTGRESQL', 'SQLSERVER', 'ORACLE', 'DB2', 'DAMENG', 'KINGBASE', 'MARIADB', 'SQLITE', 'INFLUXDB', 'TDENGINE', 'PRESTO', 'TRINO', 'HIVE', 'TIDB', 'CLICKHOUSE', 'ELASTICSEARCH', 'REDIS', 'IOTDB', 'SURREALDB', 'DUCKDB', 'CASSANDRA', 'MONGODB', 'SNOWFLAKE', 'DATABRICKS', 'MILVUS'], // , 'KAFKA'],
 
   getComment4Function: function (funCallStr, method, language) {
     if (typeof funCallStr != 'string') {
