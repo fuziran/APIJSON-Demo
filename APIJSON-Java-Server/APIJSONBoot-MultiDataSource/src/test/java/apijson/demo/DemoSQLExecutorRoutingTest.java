@@ -38,7 +38,13 @@ public class DemoSQLExecutorRoutingTest {
         AtomicInteger registryLookups = new AtomicInteger();
         DemoSQLExecutor executor = new TestExecutor(context(
                 Collections.emptyMap(), null, registryLookups));
-        DemoSQLConfig config = config(SQLConfig.DATABASE_MYSQL, null);
+        DemoSQLConfig config = new DemoSQLConfig() {
+            @Override
+            public String gainDBUri() {
+                return "jdbc:no-such-driver:non-kingbase-routing-test";
+            }
+        };
+        config.setDatabase(SQLConfig.DATABASE_MYSQL);
 
         assertThrows(SQLException.class,
                 () -> executor.getConnection(config));
