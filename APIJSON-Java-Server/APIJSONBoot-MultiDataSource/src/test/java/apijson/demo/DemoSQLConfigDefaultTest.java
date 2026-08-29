@@ -1,5 +1,6 @@
 package apijson.demo;
 
+import apijson.RequestMethod;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -13,6 +14,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DemoSQLConfigDefaultTest {
+
+    @Test
+    public void avgCommentId4UsesPortableFixedScaleExpression() {
+        DemoSQLConfig config = new DemoSQLConfig(
+                RequestMethod.GET, "Comment");
+
+        assertEquals(
+                "CAST(AVG(id) AS DECIMAL(38,4)) AS avgId",
+                config.parseSQLExpression(
+                        "@column", "avgCommentId4", true, true));
+    }
 
     @Test
     public void noKingbaseEnvironmentKeepsMysqlAndSysDefaults()

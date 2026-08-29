@@ -170,6 +170,7 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		RAW_MAP.put("(`Comment`.`userId`=`to`.`userId`)", "");  // 已经是一个条件表达式了，用 () 包裹是为了避免 JSON 中的 key 拼接在前面导致 SQL 出错
 		RAW_MAP.put("sum(if(userId%2=0,1,0))", "");  // 超过单个函数的 SQL 表达式
 		RAW_MAP.put("sumUserIdIsEven", "sum(if(`userId`%2=0,1,0)) AS sumUserIdIsEven");  // 简化前端传参
+		RAW_MAP.put("avgCommentId4", "CAST(AVG(id) AS DECIMAL(38,4)) AS avgId");  // 统一精确整数 AVG 的跨数据库响应精度
 		RAW_MAP.put("substring_index(substring_index(content,',',1),',',-1)", "");  // APIAuto 不支持 '，可以用 Postman 测
 		RAW_MAP.put("substring_index(substring_index(content,'.',1),'.',-1) AS subContent", "");  // APIAuto 不支持 '，可以用 Postman 测
 		RAW_MAP.put("commentWhereItem1","(`Comment`.`userId` = 38710 AND `Comment`.`momentId` = 470)");
@@ -488,7 +489,7 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		}
 
 		if (isMySQL()) {
-			return "apijson";  //TODO 改成你自己的，TiDB 可以当成 MySQL 使用， 默认密码为空字符串 ""
+			return "123456";  //TODO 改成你自己的，TiDB 可以当成 MySQL 使用， 默认密码为空字符串 ""
 		}
 		if (isPostgreSQL()) {
 			return null;  //TODO 改成你自己的
@@ -574,6 +575,7 @@ public class DemoSQLConfig extends APIJSONSQLConfig<Long> {
 		}
 		return super.gainSQL(prepared);
 	}
+
 
 	public void setSql(String sql) {
 		this.sql = sql;
