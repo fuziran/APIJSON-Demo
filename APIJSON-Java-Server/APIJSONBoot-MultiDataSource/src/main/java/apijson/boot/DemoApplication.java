@@ -23,6 +23,7 @@ import apijson.orm.AbstractParser;
 import apijson.orm.AbstractVerifier;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.PropertyFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -99,9 +100,12 @@ public class DemoApplication implements WebServerFactoryCustomizer<ConfigurableS
     }
 
     // SpringBoot 2.x 自定义端口方式
+    @Value("${server.port:8080}")
+    private int serverPort;
+
     @Override
     public void customize(ConfigurableServletWebServerFactory server) {
-        server.setPort(8080); // 9090);
+        server.setPort(serverPort);
     }
 
     // 支持 APIAuto 中 JavaScript 代码跨域请求
